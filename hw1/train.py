@@ -105,7 +105,7 @@ https://arxiv.org/pdf/1412.6980.pdf
 ###Adam parameters
 para_w = np.random.rand(18,9)
 para_bias = np.random.rand(1,1)
-para_alpha = 0.001
+para_alpha = 0.001#0.00102
 para_beta_1 = 0.9
 para_beta_2 = 0.999
 para_epsilon = 1e-8
@@ -121,10 +121,12 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
     para_v_w = np.zeros([18,9])
     para_v_b = np.zeros([1,1])
     para_t = 0
+    para_w_array = w_array
+    para_b_array = bias
     for i in range(epoch):
         para_t += 1
         for j in input_array:
-            g_t_w, g_t_b = d_loss(w_array, bias, j)
+            g_t_w, g_t_b = d_loss(para_w_array, para_b_array, j)
             para_m_w = beta_1 * para_m_w + (1-beta_1) * g_t_w
             para_m_b = beta_1 * para_m_b + (1-beta_1) * g_t_b
             para_v_w = beta_2 * para_v_w + (1-beta_2) * g_t_w**2
@@ -133,12 +135,12 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_m_b_hat = para_m_b / (1-beta_1**para_t)
             para_v_w_hat = para_v_w / (1-beta_2**para_t)
             para_v_b_hat = para_v_b / (1-beta_2**para_t)
-            w_array = w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
-            bias = bias - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
+            para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
+            para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
             
-        print("epoch:%d training loss = %f validation loss = %f" % (i+1,loss(w_array, bias, input_array),loss(w_array, bias, valid)))
+        print("epoch:%d training loss = %f validation loss = %f" % (i+1,loss(para_w_array, para_b_array, input_array),loss(para_w_array, para_b_array, valid)))
         
-    return
+    return para_w_array, para_b_array
 
 #validation
 def validation(input_array):
@@ -151,7 +153,7 @@ def validation(input_array):
 validation_array, training_array = validation(t_data_array)
 
 #executing Adam
-Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
+para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
 
 #Save model
 np.save("trained_w.npy", para_w)
@@ -159,3 +161,7 @@ np.save("trained_b.npy", para_bias)
 np.save("data_mean.npy", data_mean)
 np.save("data_std.npy", data_std)
 
+#checking
+with open("record.csv", "a") as f:
+    print("%f,%f"%(loss(para_w, para_bias, training_array),loss(para_w, para_bias, validation_array)), file = f)
+    
