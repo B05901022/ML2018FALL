@@ -113,6 +113,17 @@ para_epsilon = 1e-8
 ###epoch needed
 para_epoch = 500
 
+#best record
+def parameter_keep(history, new):
+    """
+    input:para_history
+    output:new validation loss
+    """
+    if history[2] > new:
+        return True
+    else:
+        return False
+
 ###Adam
 def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, valid):
     ###Adam initialization
@@ -123,6 +134,7 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
     para_t = 0
     para_w_array = w_array
     para_b_array = bias
+    para_history = [para_w_array,para_b_array,10000]#best record
     for i in range(epoch):
         para_t += 1
         for j in input_array:
@@ -137,10 +149,13 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_v_b_hat = para_v_b / (1-beta_2**para_t)
             para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
             para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
-            
-        print("epoch:%d training loss = %f validation loss = %f" % (i+1,loss(para_w_array, para_b_array, input_array),loss(para_w_array, para_b_array, valid)))
         
-    return para_w_array, para_b_array
+        training_loss = loss(para_w_array, para_b_array, input_array)
+        validation_loss = loss(para_w_array, para_b_array, valid)
+        print("epoch:%d training loss = %f validation loss = %f" % (i+1,training_loss,validation_loss))
+        if parameter_keep(para_history, validation_loss):
+            para_history = [para_w_array, para_b_array, validation_loss]    
+    return para_history[0], para_history[1]#para_w_array, para_b_array
 
 #validation
 def validation(input_array):
@@ -155,11 +170,21 @@ validation_array, training_array = validation(t_data_array)
 #executing Adam
 para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
 
-#Save model
-np.save("trained_w.npy", para_w)
-np.save("trained_b.npy", para_bias)
-np.save("data_mean.npy", data_mean)
-np.save("data_std.npy", data_std)
+#Save model & update_parameter(under condition that trained_w.py and trained_b.py exist)
+def update_parameter(result_parameters, load_parameters):   
+    if loss(result_parameters[0], result_parameters[1], t_data_array) < loss(load_parameters[0], load_parameters[1], t_data_array):
+        return True
+    else:
+        return False
+    
+para_w_load = np.load("trained_w.npy")
+para_b_load = np.load("trained_b.npy")
+
+if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
+    np.save("trained_w.npy", para_w)
+    np.save("trained_b.npy", para_bias)
+    np.save("data_mean.npy", data_mean)
+    np.save("data_std.npy", data_std)
 
 #checking
 with open("record.csv", "a") as f:
