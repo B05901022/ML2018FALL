@@ -105,9 +105,9 @@ https://arxiv.org/pdf/1412.6980.pdf
 ###Adam parameters
 para_w = np.random.rand(18,9)
 para_bias = np.random.rand(1,1)
-para_alpha = 0.001#0.00102
+para_alpha = 0.001#0.0015 too large
 para_beta_1 = 0.9#0.8
-para_beta_2 = 0.999
+para_beta_2 = 0.9984#0.999
 para_epsilon = 1e-7#1e-8
 
 ###epoch needed
