@@ -25,6 +25,18 @@ for i in range(data_train.shape[0]):
 data_array = np.array(data_list)
 y_data_array = data_array[9][:]
 
+#Garbage data filter
+def is_garbage(input_array):
+    garbage_list = []
+    for i in range(input_array.shape[1]):
+        if (input_array[:,i] == np.zeros([18,1])).all():
+            garbage_list.append(i)
+        
+    return tuple(garbage_list)
+
+garbage_tuple = is_garbage(data_array)
+data_array = np.delete(data_array, garbage_tuple, axis = 1)
+
 #Preprocessing data
 p_data_list = []
 data_mean = np.mean(data_array, axis = 1)
@@ -33,6 +45,9 @@ for i in range(data_array.shape[0]):
     p_data_list.append((data_array[i]-data_mean[i])/data_std[i])
 
 p_data_array = np.array(p_data_list)
+
+for i in garbage_tuple:
+    p_data_array = np.insert(p_data_array, i, 0, axis = 1)
 
 #stochastic gradient descent preprocess
 """
@@ -56,10 +71,24 @@ def p_sgd(input_array, input_y_array):
 t_data_list = []
 for i in range(12):
     temp_mb = p_sgd(p_data_array[:,i*480:(i+1)*480], y_data_array[i*480:(i+1)*480]).tolist()
-    for j in temp_mb:
+    for j in temp_mb: 
         t_data_list.append(j)
         
-t_data_array = np.array(t_data_list)    
+t_data_array = np.array(t_data_list)
+
+#delete garbage inputs from garbage_tuple
+garbage_input_list = []
+for i in garbage_tuple:
+     temp = i%480
+     low_bound = temp-9
+     high_bound = temp+8
+     if low_bound < 0:low_bound = 0
+     if high_bound > 480:high_bound = 480
+     temp_list = list(range(low_bound, high_bound+1-8))
+     garbage_input_list +=  [j+480*(i//480) for j in temp_list]
+garbage_input_tuple = tuple(set(garbage_input_list))
+
+t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)     
 
 #loss function
 def loss(w_array, bias, input_array):
@@ -190,12 +219,10 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
         para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
     return loss(para_w_array, para_b_array, valid)
     
-
 while initial_loss > 40.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
 #validation_array, training_array = validation(t_data_array)
-
 
 #executing Adam
 para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
@@ -206,7 +233,7 @@ def update_parameter(result_parameters, load_parameters):
         return True
     else:
         return False
-    
+  
 para_w_load = np.load("trained_w.npy")
 para_b_load = np.load("trained_b.npy")
 
