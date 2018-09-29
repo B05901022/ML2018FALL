@@ -134,9 +134,9 @@ https://arxiv.org/pdf/1412.6980.pdf
 ###Adam parameters
 para_w = np.random.rand(18,9)
 para_bias = np.random.rand(1,1)
-para_alpha = 0.001#0.0015 too large
-para_beta_1 = 0.9#0.8
-para_beta_2 = 0.9984#0.999
+para_alpha = 0.002#0.0015 too large
+para_beta_1 = 0.6#0.8
+para_beta_2 = 0.9#0.999
 para_epsilon = 1e-7#1e-8
 
 ###epoch needed
@@ -165,9 +165,9 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
     para_b_array = bias
     para_history = [para_w_array,para_b_array,10000]#best record
     for i in range(epoch):
-        para_t += 1
+        
         for j in input_array:
-            
+            para_t += 1
             g_t_w, g_t_b = d_loss(para_w_array, para_b_array, j)
             para_m_w = beta_1 * para_m_w + (1-beta_1) * g_t_w
             para_m_b = beta_1 * para_m_b + (1-beta_1) * g_t_b
@@ -188,12 +188,22 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
     return para_history[0], para_history[1]#para_w_array, para_b_array
 
 #validation
+"""
 def validation(input_array):
     array_length = input_array.shape[0]
     random_num = np.arange(input_array.shape[0])
     np.random.shuffle(random_num)
     input_array = [input_array[i] for i in random_num]
     return np.array(input_array[:int(0.1*array_length)]), np.array(input_array[int(0.1*array_length):])
+"""
+def validation(input_array):
+    array_length = input_array.shape[0]
+    validation_set = input_array[:int(0.1*array_length)]
+    training_set = input_array[int(0.1*array_length):]
+    random_num = np.arange(training_set.shape[0])
+    np.random.shuffle(random_num)
+    training_set = [training_set[i] for i in random_num]
+    return validation_set, np.array(training_set)
 
 initial_loss = 10000.00
 
@@ -219,7 +229,7 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
         para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
     return loss(para_w_array, para_b_array, valid)
     
-while initial_loss > 40.0:
+while initial_loss > 50.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
 #validation_array, training_array = validation(t_data_array)
@@ -229,7 +239,7 @@ para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, par
 
 #Save model & update_parameter(under condition that trained_w.py and trained_b.py exist)
 def update_parameter(result_parameters, load_parameters):   
-    if loss(result_parameters[0], result_parameters[1], t_data_array) < loss(load_parameters[0], load_parameters[1], t_data_array):
+    if loss(result_parameters[0], result_parameters[1], validation_array) < loss(load_parameters[0], load_parameters[1], validation_array):
         return True
     else:
         return False
