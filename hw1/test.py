@@ -22,7 +22,7 @@ for i in range(data_test.shape[0]):
     temp_list = data_test[i][2:].tolist()
     if i%18 == 10:
         for j in range(len(temp_list)):
-            if temp_list[j] == 'NR':temp_list[j] = '0'
+            if temp_list[j] == 'NR':temp_list[j] = '-10'
     data_list[i%18] += [(eval(k)-para_mean[i%18])/para_std[i%18] for k in temp_list]
 
 data_array = np.array(data_list)

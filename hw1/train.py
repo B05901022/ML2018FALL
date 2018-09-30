@@ -19,7 +19,7 @@ for i in range(data_train.shape[0]):
     temp_list = data_train[i][3:].tolist()
     if i%18 == 10:
         for j in range(len(temp_list)):
-            if temp_list[j] == 'NR':temp_list[j] = '0'
+            if temp_list[j] == 'NR':temp_list[j] = '-10'
     data_list[i%18] += [eval(k) for k in temp_list]
 
 data_array = np.array(data_list)
@@ -140,7 +140,7 @@ para_beta_2 = 0.9#0.999
 para_epsilon = 1e-7#1e-8
 
 ###epoch needed
-para_epoch = 1000
+para_epoch = 500
 
 #best record
 def parameter_keep(history, new):
@@ -205,6 +205,17 @@ def validation(input_array):
     training_set = [training_set[i] for i in random_num]
     return validation_set, np.array(training_set)
 
+#noise adding
+def noise_add(input_array, mu, sigma, amount):
+    output_list = [input_array[i] for i in range(input_array.shape[0])]
+    for j in range(amount):
+        for i in range(input_array.shape[0]):
+            noise = np.random.normal(mu, sigma, [18,9])
+            output_list.append(np.array([input_array[i][0]+noise, input_array[i][1]]))
+    return np.array(output_list)
+t_data_array = noise_add(t_data_array, 0, 0.1, 1)
+
+#early "GIVEUP"
 initial_loss = 10000.00
 
 def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid):
@@ -232,7 +243,6 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
 while initial_loss > 50.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
-#validation_array, training_array = validation(t_data_array)
 
 #executing Adam
 para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
@@ -259,6 +269,7 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
 """
+
 #checking
 with open("record.csv", "a") as f:
     print("%f,%f"%(loss(para_w, para_bias, training_array),loss(para_w, para_bias, validation_array)), file = f)
