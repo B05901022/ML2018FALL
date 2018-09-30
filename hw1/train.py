@@ -243,7 +243,13 @@ def update_parameter(result_parameters, load_parameters):
         return True
     else:
         return False
-  
+
+np.save("trained_w.npy", para_w)
+np.save("trained_b.npy", para_bias)
+np.save("data_mean.npy", data_mean)
+np.save("data_std.npy", data_std)
+
+"""  
 para_w_load = np.load("trained_w.npy")
 para_b_load = np.load("trained_b.npy")
 
@@ -252,7 +258,7 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("trained_b.npy", para_bias)
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
-
+"""
 #checking
 with open("record.csv", "a") as f:
     print("%f,%f"%(loss(para_w, para_bias, training_array),loss(para_w, para_bias, validation_array)), file = f)
