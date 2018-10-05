@@ -19,7 +19,7 @@ for i in range(data_train.shape[0]):
     temp_list = data_train[i][3:].tolist()
     if i%18 == 10:
         for j in range(len(temp_list)):
-            if temp_list[j] == 'NR':temp_list[j] = '-10'
+            if temp_list[j] == 'NR':temp_list[j] = '0'
     data_list[i%18] += [eval(k) for k in temp_list]
 
 data_array = np.array(data_list)
@@ -143,13 +143,15 @@ para_epsilon = 1e-7#1e-8
 para_epoch = 500
 
 #best record
-def parameter_keep(history, new):
+def parameter_keep(history, new_v):
     """
     input:para_history
     output:new validation loss
     """
-    if history[2] > new:
+    
+    if history[2] > new_v:
         return True
+        
     else:
         return False
 
@@ -194,7 +196,7 @@ def validation(input_array):
     random_num = np.arange(input_array.shape[0])
     np.random.shuffle(random_num)
     input_array = [input_array[i] for i in random_num]
-    return np.array(input_array[:int(0.1*array_length)]), np.array(input_array[int(0.1*array_length):])
+    return np.array(input_array[:int(0.2*array_length)]), np.array(input_array[int(0.2*array_length):])
 """
 def validation(input_array):
     array_length = input_array.shape[0]
@@ -204,6 +206,7 @@ def validation(input_array):
     np.random.shuffle(random_num)
     training_set = [training_set[i] for i in random_num]
     return validation_set, np.array(training_set)
+
 
 #noise adding
 def noise_add(input_array, mu, sigma, amount):
@@ -254,6 +257,8 @@ def update_parameter(result_parameters, load_parameters):
     else:
         return False
 
+"""
+
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
 np.save("data_mean.npy", data_mean)
@@ -268,7 +273,7 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("trained_b.npy", para_bias)
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
-"""
+
 
 #checking
 with open("record.csv", "a") as f:
