@@ -194,7 +194,7 @@ para_beta_2 = 0.9#0.9
 para_epsilon = 1e-8#1e-7
 
 ###epoch needed
-para_epoch = 500
+para_epoch = 200
 
 #best record
 def parameter_keep(history, new_v):
@@ -297,7 +297,7 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
         para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
     return loss(para_w_array, para_b_array, valid)
     
-while initial_loss > 15.0:
+while initial_loss > 9.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
 
@@ -311,7 +311,7 @@ def update_parameter(result_parameters, load_parameters):
     else:
         return False
 
-
+"""
 
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
@@ -327,7 +327,6 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("trained_b.npy", para_bias)
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
-"""
 
 #checking
 with open("record.csv", "a") as f:
