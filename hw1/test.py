@@ -27,7 +27,24 @@ for i in range(data_test.shape[0]):
 
 data_array = np.array(data_list)
 data_arrays_list = [data_array[:,i:i+9] for i in range(0,data_array.shape[1],9)]
+"""
+#feature adding(by data)
+def feature_adding(input_array):
+    output_array = input_array
+    additional_feature_list = [0 for i in range(input_array.shape[1])]
+    effect_ratio = 0
+    for j in range(len(input_array[10])):
+        additional_feature_list[j] += effect_ratio
+        effect_ratio /= 3
+        if input_array[10][j] > 0:
+            effect_ratio = 1.0
+    additional_feature = np.array(additional_feature_list)
+    output_array = np.insert(output_array, input_array.shape[0], additional_feature, 0)
+    return output_array
 
+data_arrays_list = [feature_adding(i) for i in data_arrays_list]
+"""
+#prediction
 prediction_list = []
 for i in data_arrays_list:
     prediction_list.append((para_b + np.sum(para_w * i)).tolist()[0][0])

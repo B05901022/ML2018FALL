@@ -125,19 +125,73 @@ def d_loss(w_array, bias, input_array):
     total_w += -2*temp_loss*input_array[0]
     total_b += -2*temp_loss
     return total_w, total_b
+
+#feature cancel(by weight)
+def feature_cancel(w_array):
+    #CH4, NMHC, THC
+    w_new_array = w_array
+    w_new_array[1] = np.zeros([1,w_array.shape[1]])
+    w_new_array[3] = np.zeros([1,w_array.shape[1]])
+    w_new_array[13] = np.zeros([1,w_array.shape[1]])
+    return w_new_array
+"""
+#feature adding(by data)
+def feature_adding(input_array):
+    feature_adding_list = []
+    output_array = input_array
+    for i in range(input_array.shape[0]):
+        additional_feature_list = [0 for i in range(input_array[i][0].shape[1])]
+        effect_ratio = 0
+        for j in range(len(input_array[i][0][10])):
+            additional_feature_list[j] += effect_ratio
+            effect_ratio /= 3
+            if input_array[i][0][10][j] > 0:
+                effect_ratio = 1.0
+        feature_adding_list+=additional_feature_list
+        additional_feature = np.array(additional_feature_list)
+        output_array[i][0] = np.insert(output_array[i][0], input_array[i][0].shape[0], additional_feature, 0)
+    feature_adding_array = np.array(feature_adding_list)
+    added_mu = np.mean(feature_adding_array)
+    added_std = np.std(feature_adding_array)
+    return output_array, added_mu, added_std
+
+t_data_temp = feature_adding(t_data_array)
+t_data_array = t_data_temp[0]
+data_mean = np.insert(data_mean, data_mean.shape, t_data_temp[1], 0)
+data_std = np.insert(data_std, data_std.shape, t_data_temp[2], 0)
+"""
+#Initialization of w
+def para_wb_initialize(data):
+    parameter_w_list = [[] for i in range(data[0][0].shape[0]*data[0][0].shape[1])]
+    parameter_y_list = []
+    for i in data:
+        for j in range(i[0].shape[0]):
+            for k in range(i[0].shape[1]):
+                parameter_w_list[j*i[0].shape[1]+k].append(i[0][j,k])
+        parameter_y_list.append(i[1])
+    X_array = np.mat(parameter_w_list).T
+    X_array = np.insert(X_array, 0, np.ones(data.shape[0]), 1)
     
+    T_array = np.mat([parameter_y_list]).T
+    parameter_wb_star = X_array.I * T_array
+    parameter_b_star = np.array([[parameter_wb_star[0, 0]]])
+    parameter_w_star = np.array(parameter_wb_star[1:, 0]).reshape([18,9])
+    return parameter_w_star, parameter_b_star
+  
 #Adam implementation
 """
 Reference:ADAM: A METHOD FOR STOCHASTIC OPTIMIZATION
 https://arxiv.org/pdf/1412.6980.pdf
 """
 ###Adam parameters
-para_w = np.random.rand(18,9)
-para_bias = np.random.rand(1,1)
-para_alpha = 0.002#0.0015 too large
-para_beta_1 = 0.6#0.8
-para_beta_2 = 0.9#0.999
-para_epsilon = 1e-7#1e-8
+para_w, para_bias =para_wb_initialize(t_data_array)
+para_w = feature_cancel(para_w)
+#para_w = np.random.rand(18,9)
+#para_bias = np.random.rand(1,1)
+para_alpha = 0.002#0.002
+para_beta_1 = 0.6#0.6
+para_beta_2 = 0.9#0.9
+para_epsilon = 1e-8#1e-7
 
 ###epoch needed
 para_epoch = 500
@@ -181,7 +235,7 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_v_b_hat = para_v_b / (1-beta_2**para_t)
             para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
             para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
-        
+            para_w_array = feature_cancel(para_w_array)
         training_loss = loss(para_w_array, para_b_array, input_array)
         validation_loss = loss(para_w_array, para_b_array, valid)
         print("epoch:%d training loss = %f validation loss = %f" % (i+1,training_loss,validation_loss))
@@ -190,13 +244,13 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
     return para_history[0], para_history[1]#para_w_array, para_b_array
 
 #validation
-"""
+
 def validation(input_array):
     array_length = input_array.shape[0]
     random_num = np.arange(input_array.shape[0])
     np.random.shuffle(random_num)
     input_array = [input_array[i] for i in random_num]
-    return np.array(input_array[:int(0.2*array_length)]), np.array(input_array[int(0.2*array_length):])
+    return np.array(input_array[:int(0.1*array_length)]), np.array(input_array[int(0.1*array_length):])
 """
 def validation(input_array):
     array_length = input_array.shape[0]
@@ -206,7 +260,7 @@ def validation(input_array):
     np.random.shuffle(random_num)
     training_set = [training_set[i] for i in random_num]
     return validation_set, np.array(training_set)
-
+"""
 
 #noise adding
 def noise_add(input_array, mu, sigma, amount):
@@ -230,7 +284,7 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
     para_w_array = w_array
     para_b_array = bias
     for i in input_array:
-        g_t_w, g_t_b = d_loss(para_w_array, para_b_array, j)
+        g_t_w, g_t_b = d_loss(para_w_array, para_b_array, i)
         para_m_w = beta_1 * para_m_w + (1-beta_1) * g_t_w
         para_m_b = beta_1 * para_m_b + (1-beta_1) * g_t_b
         para_v_w = beta_2 * para_v_w + (1-beta_2) * g_t_w**2
@@ -243,7 +297,7 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
         para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
     return loss(para_w_array, para_b_array, valid)
     
-while initial_loss > 50.0:
+while initial_loss > 15.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
 
@@ -257,7 +311,7 @@ def update_parameter(result_parameters, load_parameters):
     else:
         return False
 
-"""
+
 
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
@@ -273,7 +327,7 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("trained_b.npy", para_bias)
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
-
+"""
 
 #checking
 with open("record.csv", "a") as f:
