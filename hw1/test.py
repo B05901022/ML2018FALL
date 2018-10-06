@@ -23,10 +23,14 @@ for i in range(data_test.shape[0]):
     if i%18 == 10:
         for j in range(len(temp_list)):
             if temp_list[j] == 'NR':temp_list[j] = '0'
-    data_list[i%18] += [(eval(k)-para_mean[i%18])/para_std[i%18] for k in temp_list]
+    #data_list[i%18] += [(eval(k)-para_mean[i%18])/para_std[i%18] for k in temp_list]
+    data_list[i%18] += [eval(k) for k in temp_list]
 
 data_array = np.array(data_list)
 data_arrays_list = [data_array[:,i:i+9] for i in range(0,data_array.shape[1],9)]
+
+data_arrays_list = [(i-para_mean)/para_std for i in data_arrays_list]
+
 """
 #feature adding(by data)
 def feature_adding(input_array):

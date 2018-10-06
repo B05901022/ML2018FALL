@@ -37,6 +37,7 @@ def is_garbage(input_array):
 garbage_tuple = is_garbage(data_array)
 data_array = np.delete(data_array, garbage_tuple, axis = 1)
 
+"""
 #Preprocessing data
 p_data_list = []
 data_mean = np.mean(data_array, axis = 1)
@@ -45,6 +46,8 @@ for i in range(data_array.shape[0]):
     p_data_list.append((data_array[i]-data_mean[i])/data_std[i])
 
 p_data_array = np.array(p_data_list)
+"""
+p_data_array = data_array
 
 for i in garbage_tuple:
     p_data_array = np.insert(p_data_array, i, 0, axis = 1)
@@ -88,7 +91,34 @@ for i in garbage_tuple:
      garbage_input_list +=  [j+480*(i//480) for j in temp_list]
 garbage_input_tuple = tuple(set(garbage_input_list))
 
-t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)     
+t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)
+
+#feature scaling
+def feature_scaling(input_array):
+    temp_array = input_array
+    feature_list = [[[] for i in range(input_array[0][0].shape[1])] for j in range(input_array[0][0].shape[0])]
+    for i in input_array:
+        for j in range(i[0].shape[0]):
+            for k in range(i[0].shape[1]):
+                feature_list[j][k].append(i[0][j,k])
+    feature_array = np.array(feature_list)
+    feature_mean = [[0 for i in range(input_array[0][0].shape[1])] for j in range(input_array[0][0].shape[0])]
+    feature_std = [[0 for i in range(input_array[0][0].shape[1])] for j in range(input_array[0][0].shape[0])]
+    for i in range(feature_array.shape[0]):
+        for j in range(feature_array.shape[1]):
+            feature_mean[i][j] += np.mean(feature_array[i,j])
+            feature_std[i][j] += np.std(feature_array[i,j])
+    feature_mean_array = np.array(feature_mean)
+    feature_std_array = np.array(feature_std)
+    for i in temp_array:
+        i[0] = (i[0]-feature_mean_array)/feature_std_array
+    
+    return temp_array, feature_mean_array, feature_std_array  
+
+feature_feature = feature_scaling(t_data_array)
+t_data_array = feature_feature[0]
+data_mean = feature_feature[1]
+data_std = feature_feature[2]
 
 #loss function
 def loss(w_array, bias, input_array):
@@ -311,8 +341,8 @@ def update_parameter(result_parameters, load_parameters):
     else:
         return False
 
-"""
 
+"""
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
 np.save("data_mean.npy", data_mean)
@@ -327,6 +357,7 @@ if update_parameter([para_w, para_bias], [para_w_load, para_b_load]):
     np.save("trained_b.npy", para_bias)
     np.save("data_mean.npy", data_mean)
     np.save("data_std.npy", data_std)
+
 
 #checking
 with open("record.csv", "a") as f:
