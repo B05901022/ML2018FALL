@@ -273,25 +273,6 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_history = [para_w_array, para_b_array, validation_loss]    
     return para_history[0], para_history[1]#para_w_array, para_b_array
 
-#validation
-
-def validation(input_array):
-    array_length = input_array.shape[0]
-    random_num = np.arange(input_array.shape[0])
-    np.random.shuffle(random_num)
-    input_array = [input_array[i] for i in random_num]
-    return np.array(input_array[:int(0.1*array_length)]), np.array(input_array[int(0.1*array_length):])
-"""
-def validation(input_array):
-    array_length = input_array.shape[0]
-    validation_set = input_array[:int(0.1*array_length)]
-    training_set = input_array[int(0.1*array_length):]
-    random_num = np.arange(training_set.shape[0])
-    np.random.shuffle(random_num)
-    training_set = [training_set[i] for i in random_num]
-    return validation_set, np.array(training_set)
-"""
-
 #noise adding
 def noise_add(input_array, mu, sigma, amount):
     output_list = [input_array[i] for i in range(input_array.shape[0])]
@@ -302,6 +283,7 @@ def noise_add(input_array, mu, sigma, amount):
     return np.array(output_list)
 t_data_array = noise_add(t_data_array, 0, 0.1, 1)
 
+"""
 #early "GIVEUP"
 initial_loss = 10000.00
 
@@ -326,7 +308,7 @@ def Adam_check(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, valid
         para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
         para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
     return loss(para_w_array, para_b_array, valid)
-    
+   
 while initial_loss > 10.0:
     validation_array, training_array = validation(t_data_array)
     initial_loss = Adam_check(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, validation_array)
@@ -334,21 +316,65 @@ while initial_loss > 10.0:
 #executing Adam
 para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
 
-#Save model & update_parameter(under condition that trained_w.py and trained_b.py exist)
-def update_parameter(result_parameters, load_parameters):   
-    if loss(result_parameters[0], result_parameters[1], validation_array) < loss(load_parameters[0], load_parameters[1], validation_array):
-        return True
-    else:
-        return False
+"""
 
+def cross_validation(input_array_length, N):
+    random_num = np.arange(input_array_length)
+    np.random.shuffle(random_num)
+    validation_index = [(random_num[i*N:i*N+N],np.append(random_num[:i*N], random_num[i*N+N:])) for i in range(N)]
+    return validation_index
+    
+def cross_validation_slice(input_array, slice_tuple):
+    validation = [input_array[i] for i in slice_tuple[0]]
+    training = [input_array[i] for i in slice_tuple[1]]
+    return np.array(validation), np.array(training)
+         
+#validation
+def validation(input_array):
+    array_length = input_array.shape[0]
+    random_num = np.arange(input_array.shape[0])
+    np.random.shuffle(random_num)
+    input_array = [input_array[i] for i in random_num]
+    return np.array(input_array[:int(0.1*array_length)]), np.array(input_array[int(0.1*array_length):])
 
+"""
+def validation(input_array):
+    array_length = input_array.shape[0]
+    validation_set = input_array[:int(0.1*array_length)]
+    training_set = input_array[int(0.1*array_length):]
+    random_num = np.arange(training_set.shape[0])
+    np.random.shuffle(random_num)
+    training_set = [training_set[i] for i in random_num]
+    return validation_set, np.array(training_set)
+"""
 
+cross_validation_tuples = cross_validation(t_data_array.shape[0], 10)
+para_wb_list = []
+for m in cross_validation_tuples:
+    validation_array, training_array = cross_validation_slice(t_data_array, m)
+    para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
+    para_wb_list.append((para_w, para_bias, loss(para_w, para_bias, validation_array)))
+    para_w, para_bias =para_wb_initialize(t_data_array)
+    para_w = feature_cancel(para_w)
+    
+selected_wb_list = sorted(para_wb_list, key = lambda x: x[2])[:3]
+para_w = (selected_wb_list[0][0] * 4 + selected_wb_list[1][0] * 2 + selected_wb_list[2][0])/7.0
+para_bias = (selected_wb_list[0][1] * 4 + selected_wb_list[1][1] * 2 + selected_wb_list[2][1])/7.0
+
+    
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
 np.save("data_mean.npy", data_mean)
 np.save("data_std.npy", data_std)
 
 """  
+#Save model & update_parameter(under condition that trained_w.py and trained_b.py exist)
+def update_parameter(result_parameters, load_parameters):   
+    if loss(result_parameters[0], result_parameters[1], validation_array) < loss(load_parameters[0], load_parameters[1], validation_array):
+        return True
+    else:
+        return False
+        
 para_w_load = np.load("trained_w.npy")
 para_b_load = np.load("trained_b.npy")
 
