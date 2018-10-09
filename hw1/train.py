@@ -31,7 +31,10 @@ def is_garbage(input_array):
     for i in range(input_array.shape[1]):
         if (input_array[:,i] == np.zeros([18,1])).all():
             garbage_list.append(i)
-        
+        if input_array[9,i] > 300:
+            garbage_list.append(i)
+
+
     return tuple(garbage_list)
 
 garbage_tuple = is_garbage(data_array)
@@ -89,7 +92,7 @@ for i in garbage_tuple:
      if high_bound > 480:high_bound = 480
      temp_list = list(range(low_bound, high_bound+1-8))
      garbage_input_list +=  [j+480*(i//480) for j in temp_list]
-garbage_input_tuple = tuple(set(garbage_input_list))
+garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))))#+list(range(5280,5760))
 
 t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)
 
@@ -215,12 +218,13 @@ https://arxiv.org/pdf/1412.6980.pdf
 """
 ###Adam parameters
 para_w, para_bias =para_wb_initialize(t_data_array)
+para_w_i, para_bias_i = para_w, para_bias
 para_w = feature_cancel(para_w)
 #para_w = np.random.rand(18,9)
 #para_bias = np.random.rand(1,1)
-para_alpha = 0.002#0.002
-para_beta_1 = 0.6#0.6
-para_beta_2 = 0.9#0.9
+para_alpha = 0.001#0.002
+para_beta_1 = 0.9#0.6
+para_beta_2 = 0.999#0.9
 para_epsilon = 1e-8#1e-7
 
 ###epoch needed
@@ -319,9 +323,10 @@ para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, par
 """
 
 def cross_validation(input_array_length, N):
+    data_length = input_array_length//N
     random_num = np.arange(input_array_length)
     np.random.shuffle(random_num)
-    validation_index = [(random_num[i*N:i*N+N],np.append(random_num[:i*N], random_num[i*N+N:])) for i in range(N)]
+    validation_index = [(random_num[i*data_length:i*data_length+data_length],np.append(random_num[:i*data_length], random_num[i*data_length+data_length:])) for i in range(N)]
     return validation_index
     
 def cross_validation_slice(input_array, slice_tuple):
@@ -348,19 +353,23 @@ def validation(input_array):
     return validation_set, np.array(training_set)
 """
 
-cross_validation_tuples = cross_validation(t_data_array.shape[0], 10)
+cross_validation_tuples = cross_validation(t_data_array.shape[0], 9)
 para_wb_list = []
+record_list = []
 for m in cross_validation_tuples:
     validation_array, training_array = cross_validation_slice(t_data_array, m)
     para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
     para_wb_list.append((para_w, para_bias, loss(para_w, para_bias, validation_array)))
-    para_w, para_bias =para_wb_initialize(t_data_array)
+    record_list.append(loss(para_w, para_bias, validation_array)[0])
+    para_w, para_bias =para_w_i, para_bias_i
     para_w = feature_cancel(para_w)
     
 selected_wb_list = sorted(para_wb_list, key = lambda x: x[2])[:3]
-para_w = (selected_wb_list[0][0] * 4 + selected_wb_list[1][0] * 2 + selected_wb_list[2][0])/7.0
-para_bias = (selected_wb_list[0][1] * 4 + selected_wb_list[1][1] * 2 + selected_wb_list[2][1])/7.0
+para_w = (selected_wb_list[0][0] * 2 + selected_wb_list[1][0] * 2 + selected_wb_list[2][0] * 1)/5.0
+para_bias = (selected_wb_list[0][1] * 2 + selected_wb_list[1][1] * 2 + selected_wb_list[2][1] * 1)/5.0
 
+print(record_list)
+print(loss(para_w, para_bias, t_data_array))
     
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
