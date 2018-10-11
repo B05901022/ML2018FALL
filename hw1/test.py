@@ -29,7 +29,9 @@ for i in range(data_test.shape[0]):
 data_array = np.array(data_list)
 data_arrays_list = [data_array[:,i:i+9] for i in range(0,data_array.shape[1],9)]
 
-data_arrays_list = [(i-para_mean)/para_std for i in data_arrays_list]
+new_list = [np.vstack([i,i[9]**2,i[10]**2,i[11]**2]) for i in data_arrays_list]
+
+data_arrays_list = [(i-para_mean)/para_std for i in new_list]
 
 """
 #feature adding(by data)

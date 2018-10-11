@@ -96,6 +96,17 @@ garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))+list(ra
 
 t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)
 
+#feature adding
+def feature_adding(input_array):
+    temp_array = input_array
+    for i in temp_array:
+        i[0] = np.vstack([i[0],i[0][9]**2])
+        i[0] = np.vstack([i[0],i[0][10]**2])
+        i[0] = np.vstack([i[0],i[0][11]**2])
+    return temp_array
+
+t_data_array = feature_adding(t_data_array)
+
 #feature scaling
 def feature_scaling(input_array):
     temp_array = input_array
@@ -149,7 +160,7 @@ def d_loss(w_array, bias, input_array):
         total_w:18*9 matrix
         total_b:1*1 matrix
     """
-    total_w = np.zeros([18,9])
+    total_w = np.zeros([21,9])
     total_b = np.zeros([1,1])
     temp = 0
     temp += np.sum(np.multiply(w_array, input_array[0]))
@@ -208,7 +219,7 @@ def para_wb_initialize(data):
     T_array = np.mat([parameter_y_list]).T
     parameter_wb_star = X_array.I * T_array
     parameter_b_star = np.array([[parameter_wb_star[0, 0]]])
-    parameter_w_star = np.array(parameter_wb_star[1:, 0]).reshape([18,9])
+    parameter_w_star = np.array(parameter_wb_star[1:, 0]).reshape([21,9])
     return parameter_w_star, parameter_b_star
   
 #Adam implementation
@@ -246,9 +257,9 @@ def parameter_keep(history, new_v):
 ###Adam
 def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, valid):
     ###Adam initialization
-    para_m_w = np.zeros([18,9])
+    para_m_w = np.zeros([21,9])
     para_m_b = np.zeros([1,1])
-    para_v_w = np.zeros([18,9])
+    para_v_w = np.zeros([21,9])
     para_v_b = np.zeros([1,1])
     para_t = 0
     para_w_array = w_array
@@ -282,7 +293,7 @@ def noise_add(input_array, mu, sigma, amount):
     output_list = [input_array[i] for i in range(input_array.shape[0])]
     for j in range(amount):
         for i in range(input_array.shape[0]):
-            noise = np.random.normal(mu, sigma, [18,9])
+            noise = np.random.normal(mu, sigma, [21,9])
             output_list.append(np.array([input_array[i][0]+noise, input_array[i][1]]))
     return np.array(output_list)
 t_data_array = noise_add(t_data_array, 0, 0.1, 1)
