@@ -92,7 +92,7 @@ for i in garbage_tuple:
      if high_bound > 480:high_bound = 480
      temp_list = list(range(low_bound, high_bound+1-8))
      garbage_input_list +=  [j+480*(i//480) for j in temp_list]
-garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))))#+list(range(5280,5760))
+garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))+list(range(5280,5760))))
 
 t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)
 
@@ -163,9 +163,9 @@ def d_loss(w_array, bias, input_array):
 def feature_cancel(w_array):
     #CH4, NMHC, THC
     w_new_array = w_array
-    w_new_array[1] = np.zeros([1,w_array.shape[1]])
+    #w_new_array[1] = np.zeros([1,w_array.shape[1]])
     w_new_array[3] = np.zeros([1,w_array.shape[1]])
-    w_new_array[13] = np.zeros([1,w_array.shape[1]])
+    #w_new_array[13] = np.zeros([1,w_array.shape[1]])
     return w_new_array
 """
 #feature adding(by data)
@@ -222,7 +222,7 @@ para_w_i, para_bias_i = para_w, para_bias
 para_w = feature_cancel(para_w)
 #para_w = np.random.rand(18,9)
 #para_bias = np.random.rand(1,1)
-para_alpha = 0.001#0.002
+para_alpha = 0.0008#0.002
 para_beta_1 = 0.9#0.6
 para_beta_2 = 0.999#0.9
 para_epsilon = 1e-8#1e-7
