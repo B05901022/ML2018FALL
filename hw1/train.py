@@ -92,7 +92,7 @@ for i in garbage_tuple:
      if high_bound > 480:high_bound = 480
      temp_list = list(range(low_bound, high_bound+1-8))
      garbage_input_list +=  [j+480*(i//480) for j in temp_list]
-garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))+list(range(5280,5760))))
+garbage_input_tuple = tuple(set(garbage_input_list+list(range(960,1920))))#+list(range(5280,5760))
 
 t_data_array = np.delete(t_data_array, garbage_input_tuple, axis = 0)
 
@@ -239,7 +239,7 @@ para_beta_2 = 0.999#0.9
 para_epsilon = 1e-8#1e-7
 
 ###epoch needed
-para_epoch = 200
+para_epoch = 100
 
 #best record
 def parameter_keep(history, new_v):
