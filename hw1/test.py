@@ -7,8 +7,9 @@ Created on Tue Sep 25 22:44:40 2018
 
 import pandas as pd
 import numpy as np
+import sys
 
-data_test = pd.read_csv('test.csv', engine = 'python', header = None)
+data_test = pd.read_csv(sys.argv[1], engine = 'python', header = None)
 data_test = data_test.values
 
 para_w = np.load("trained_w.npy")
@@ -55,7 +56,7 @@ prediction_list = []
 for i in data_arrays_list:
     prediction_list.append((para_b + np.sum(para_w * i)).tolist()[0][0])
 
-with open('result.csv', 'w') as f:
+with open(sys.argv[2], 'w') as f:
     print('id,value', file=f)
     for i in range(len(prediction_list)):
         print('id_%d,%f' % (i, prediction_list[i]), file=f) 
