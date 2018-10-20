@@ -101,7 +101,7 @@ def sigmoid_limiter(sigmoid_value):
 def sigmoid(w_array, bias, input_array):
     z = np.sum(np.multiply(w_array, input_array)) + bias
     sigmoid_result = 1/(1+np.exp(-z))
-    return sigmoid_limiter(sigmoid_result)
+    return sigmoid_result#sigmoid_limiter(sigmoid_result)
 
 #cross entropy
 def cross_entropy(w_array, bias, input_array, label, activation_function = 'sigmoid'):
@@ -117,6 +117,11 @@ def loss(w_array, bias, input_array, label_array, activation_function = 'sigmoid
         total_loss += cross_entropy(w_array, bias, input_array[i], label_array[i], activation_function)
     return total_loss/batch_size
 
+def accuracy(w_array, bias, input_array, label_array):
+    result_train = [0 if sigmoid(para_w, para_bias, i) >= 0.5 else 1 for i in input_array]
+    acc_train = [1 if result_train[i] == label_array[i] else 0 for i in range(len(result_train))]
+    return sum(acc_train)/len(acc_train)
+
 def d_loss(w_array, bias, input_array, label_array, activation_function = 'sigmoid'):
     #input_array is batched
     total_w = 0
@@ -125,7 +130,7 @@ def d_loss(w_array, bias, input_array, label_array, activation_function = 'sigmo
     for i in range(batch_size):
         total_w += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))*input_array[i]
         total_b += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))
-    return total_w/batch_size, total_b/batch_size
+    return total_w, total_b
 
 def array_batch(input_array, batch_size):
     return np.array([input_array[batch_size*i:batch_size*i+batch_size] for i in range(int(input_array.shape[0]/batch_size))])
@@ -177,9 +182,11 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_v_b_hat = para_v_b / (1-beta_2**para_t)
             para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
             para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
-        training_loss = loss(para_w_array, para_b_array, input_array[:,0], input_array[:,1])
+        training_loss   = loss(para_w_array, para_b_array, input_array[:,0], input_array[:,1])
         validation_loss = loss(para_w_array, para_b_array, valid[:,0], valid[:,1])
-        print("epoch:%d training loss = %f validation loss = %f" % (i+1,training_loss,validation_loss))
+        training_acc    = accuracy(para_w_array, para_b_array, input_array[:,0], input_array[:,1])
+        validation_acc  = accuracy(para_w_array, para_b_array, valid[:,0], valid[:,1])
+        print("epoch:%d training loss = %f validation loss = %f training acc = %f validation acc = %f" % (i+1,training_loss,validation_loss, training_acc, validation_acc))
         if parameter_keep(para_history, validation_loss):
             para_history = [para_w_array, para_b_array, validation_loss]
     return para_history[0], para_history[1]#para_w_array, para_b_array#
