@@ -79,7 +79,7 @@ def sigmoid(w_array, bias, input_array):
     sigmoid_result = 1/(1+np.exp(-z))
     return sigmoid_result
 
-y_test = [0 if sigmoid(para_w, para_bias, i) >= 0.5 else 1 for i in x_test]
+y_test = [1 if sigmoid(para_w, para_bias, i) >= 0.5 else 0 for i in x_test]
 
 
 with open('result_best.csv', 'w') as f:

@@ -101,7 +101,7 @@ def sigmoid_limiter(sigmoid_value):
 def sigmoid(w_array, bias, input_array):
     z = np.sum(np.multiply(w_array, input_array)) + bias
     sigmoid_result = 1/(1+np.exp(-z))
-    return sigmoid_result#sigmoid_limiter(sigmoid_result)
+    return sigmoid_result##sigmoid_limiter(sigmoid_result)#
 
 #cross entropy
 def cross_entropy(w_array, bias, input_array, label, activation_function = 'sigmoid'):
@@ -118,7 +118,7 @@ def loss(w_array, bias, input_array, label_array, activation_function = 'sigmoid
     return total_loss/batch_size
 
 def accuracy(w_array, bias, input_array, label_array):
-    result_train = [0 if sigmoid(para_w, para_bias, i) >= 0.5 else 1 for i in input_array]
+    result_train = [1 if sigmoid(w_array, bias, i) >= 0.5 else 0 for i in input_array]
     acc_train = [1 if result_train[i] == label_array[i] else 0 for i in range(len(result_train))]
     return sum(acc_train)/len(acc_train)
 
@@ -128,8 +128,8 @@ def d_loss(w_array, bias, input_array, label_array, activation_function = 'sigmo
     total_b = 0
     batch_size = input_array.shape[0]
     for i in range(batch_size):
-        total_w += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))*input_array[i]
-        total_b += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))
+        total_w -= (label_array[i]-sigmoid(w_array, bias, input_array[i]))*input_array[i]
+        total_b -= (label_array[i]-sigmoid(w_array, bias, input_array[i]))
     return total_w, total_b
 
 def array_batch(input_array, batch_size):
@@ -180,6 +180,10 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
             para_m_b_hat = para_m_b / (1-beta_1**para_t)
             para_v_w_hat = para_v_w / (1-beta_2**para_t)
             para_v_b_hat = para_v_b / (1-beta_2**para_t)
+            #print(para_w_array[0,0])
+            #print(g_t_w[0,0])
+            #print((- alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon))[0,0])
+            #print()
             para_w_array = para_w_array - alpha * para_m_w_hat / (para_v_w_hat ** 0.5 + epsilon)
             para_b_array = para_b_array - alpha * para_m_b_hat / (para_v_b_hat ** 0.5 + epsilon)
         training_loss   = loss(para_w_array, para_b_array, input_array[:,0], input_array[:,1])
@@ -204,8 +208,8 @@ def cross_validation_slice(input_array, slice_tuple):
     return np.array(validation), np.array(training)
 
 #Parameters
-para_w_i = np.zeros((93,1))
-para_b_i = 0
+para_w_i = np.random.randn(93,1)
+para_b_i = 1
 
 para_alpha = 0.001#0.001
 para_beta_1 = 0.9#0.9
