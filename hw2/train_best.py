@@ -16,10 +16,10 @@ import numpy as np
 
 #np.set_printoptions(suppress=True)
 
-x_train = pd.read_csv('train_x.csv', engine = 'python')
+x_train = pd.read_csv('train_x.csv')
 x_train = x_train.values
 
-y_train = pd.read_csv('train_y.csv', engine = 'python')
+y_train = pd.read_csv('train_y.csv')
 y_train = y_train.values
 
 #one hot
@@ -90,9 +90,9 @@ x_train = f_x_train[0]
 d_train = np.array([[np.array([j for j in x_train[i]]).reshape((93,1)), y_train[i][0]] for i in range(x_train.shape[0])])
 
 def sigmoid_limiter(sigmoid_value):
-    if sigmoid_value.any() >= 0.99999999:
+    if sigmoid_value >= 0.99999999:
         return 0.99999999
-    elif sigmoid_value.any() <= 0.00000001:
+    elif sigmoid_value <= 0.00000001:
         return 0.00000001
     else:
         return sigmoid_value
@@ -125,7 +125,7 @@ def d_loss(w_array, bias, input_array, label_array, activation_function = 'sigmo
     for i in range(batch_size):
         total_w += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))*input_array[i]
         total_b += -1*(label_array[i]-sigmoid(w_array, bias, input_array[i]))
-    return total_w, total_b
+    return total_w/batch_size, total_b/batch_size
 
 def array_batch(input_array, batch_size):
     return np.array([input_array[batch_size*i:batch_size*i+batch_size] for i in range(int(input_array.shape[0]/batch_size))])
@@ -144,16 +144,25 @@ def parameter_keep(history, new_v):
 
 def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, valid):
     ###Adam initialization
+    
     para_m_w = np.zeros([93,1])
     para_m_b = 0
     para_v_w = np.zeros([93,1])
     para_v_b = 0
     para_t = 0
+    
     para_w_array = w_array
     para_b_array = bias
     para_history = [para_w_array,para_b_array,10000]#best record
     batched_input_array = array_batch(input_array, 50)
     for i in range(epoch):
+        """
+        para_m_w = np.zeros([93,1])
+        para_m_b = 0
+        para_v_w = np.zeros([93,1])
+        para_v_b = 0
+        para_t = 0
+        """
         for j in batched_input_array:
             #batched_input_array.shape == (400,50,2)
             para_t += 1
@@ -173,7 +182,7 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
         print("epoch:%d training loss = %f validation loss = %f" % (i+1,training_loss,validation_loss))
         if parameter_keep(para_history, validation_loss):
             para_history = [para_w_array, para_b_array, validation_loss]
-    return para_w_array, para_b_array#para_history[0], para_history[1]#
+    return para_history[0], para_history[1]#para_w_array, para_b_array#
 
 def cross_validation(input_array_length, N):
     data_length = input_array_length//N
@@ -191,16 +200,19 @@ def cross_validation_slice(input_array, slice_tuple):
 para_w_i = np.zeros((93,1))
 para_b_i = 0
 
-para_alpha = 0.05#0.001
+para_alpha = 0.001#0.001
 para_beta_1 = 0.9#0.9
 para_beta_2 = 0.999#0.999
 para_epsilon = 1e-8#1e-8
-para_epoch = 30
+para_epoch = 50
 
 cross_validation_tuples = cross_validation(d_train.shape[0], 10)
 para_wb_list = []
 record_list = []
+cnt = 1
 for m in cross_validation_tuples:
+    print('segment:%d'%cnt)
+    cnt += 1
     validation_array, training_array = cross_validation_slice(d_train, m)
     para_w, para_bias =para_w_i, para_b_i
     para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
@@ -212,7 +224,11 @@ selected_wb_list = sorted(para_wb_list, key = lambda x: x[2])[:3]
 para_w = (selected_wb_list[0][0] * 2 + selected_wb_list[1][0] * 2 + selected_wb_list[2][0] * 1)/5.0
 para_bias = (selected_wb_list[0][1] * 2 + selected_wb_list[1][1] * 2 + selected_wb_list[2][1] * 1)/5.0
 
-print(record_list)
+print(' validation loss  training loss')
+for i in record_list:
+    for j in i:
+        print(j, end=" ")
+    print()
 print(loss(para_w, para_bias, d_train[:,0], d_train[:,1]))
     
 np.save("trained_w.npy", para_w)
