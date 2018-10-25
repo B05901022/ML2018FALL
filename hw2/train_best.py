@@ -90,10 +90,10 @@ x_train = f_x_train[0]
 d_train = np.array([[np.array([j for j in x_train[i]]).reshape((93,1)), y_train[i][0]] for i in range(x_train.shape[0])])
 
 def sigmoid_limiter(sigmoid_value):
-    if sigmoid_value >= 0.99999999:
-        return 0.99999999
-    elif sigmoid_value <= 0.00000001:
-        return 0.00000001
+    if sigmoid_value >= 0.9999999999:
+        return 0.9999999999
+    elif sigmoid_value <= 0.0000000001:
+        return 0.0000000001
     else:
         return sigmoid_value
         
@@ -101,7 +101,7 @@ def sigmoid_limiter(sigmoid_value):
 def sigmoid(w_array, bias, input_array):
     z = np.sum(np.multiply(w_array, input_array)) + bias
     sigmoid_result = 1/(1+np.exp(-z))
-    return sigmoid_result##sigmoid_limiter(sigmoid_result)#
+    return sigmoid_result##sigmoid_limiter(sigmoid_result)#sigmoid_result#
 
 #cross entropy
 def cross_entropy(w_array, bias, input_array, label, activation_function = 'sigmoid'):
@@ -113,8 +113,10 @@ def loss(w_array, bias, input_array, label_array, activation_function = 'sigmoid
     #input_array is batched
     total_loss = 0
     batch_size = input_array.shape[0]
+    para_lambda = 0
     for i in range(batch_size):
         total_loss += cross_entropy(w_array, bias, input_array[i], label_array[i], activation_function)
+    total_loss += para_lambda * 0.5 * np.sum(w_array**2)
     return total_loss/batch_size
 
 def accuracy(w_array, bias, input_array, label_array):
@@ -127,39 +129,47 @@ def d_loss(w_array, bias, input_array, label_array, activation_function = 'sigmo
     total_w = 0
     total_b = 0
     batch_size = input_array.shape[0]
+    para_lambda = 0
     for i in range(batch_size):
         total_w -= (label_array[i]-sigmoid(w_array, bias, input_array[i]))*input_array[i]
         total_b -= (label_array[i]-sigmoid(w_array, bias, input_array[i]))
+    total_w += para_lambda*w_array
     return total_w, total_b
 
 def array_batch(input_array, batch_size):
     return np.array([input_array[batch_size*i:batch_size*i+batch_size] for i in range(int(input_array.shape[0]/batch_size))])
 
 #best record
-def parameter_keep(history, new_v):
+def parameter_keep(history, new_v, new_t):
     """
     input:para_history
-    output:new validation loss
+    output:new validation accuracy
     """
-    if history[2] > new_v:
+    if history[2] < new_v:
         return True    
     else:
-        return False
+        if history[2] == new_v:
+            if history[3] < new_t:
+                return True
+            else:
+                return False
+        else:
+            return False
 
 
 def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, valid):
     ###Adam initialization
-    
+    #"""
     para_m_w = np.zeros([93,1])
     para_m_b = 0
     para_v_w = np.zeros([93,1])
     para_v_b = 0
     para_t = 0
-    
-    para_w_array = w_array
+    #"""
+    para_w_array = w_array.copy()
     para_b_array = bias
-    para_history = [para_w_array,para_b_array,10000]#best record
-    batched_input_array = array_batch(input_array, 50)
+    para_history = [para_w_array,para_b_array,0,0]#best record
+    batched_input_array = array_batch(input_array, 1000)
     for i in range(epoch):
         """
         para_m_w = np.zeros([93,1])
@@ -190,9 +200,10 @@ def Adam(alpha, beta_1, beta_2, epsilon, w_array, bias, input_array, epoch, vali
         validation_loss = loss(para_w_array, para_b_array, valid[:,0], valid[:,1])
         training_acc    = accuracy(para_w_array, para_b_array, input_array[:,0], input_array[:,1])
         validation_acc  = accuracy(para_w_array, para_b_array, valid[:,0], valid[:,1])
-        print("epoch:%d training loss = %f validation loss = %f training acc = %f validation acc = %f" % (i+1,training_loss,validation_loss, training_acc, validation_acc))
-        if parameter_keep(para_history, validation_loss):
-            para_history = [para_w_array, para_b_array, validation_loss]
+        print("epoch:%3d training loss = %f validation loss = %f training acc = %f validation acc = %f history best val acc = %f" % \
+              (i+1,training_loss,validation_loss, training_acc, validation_acc, para_history[2]))
+        if parameter_keep(para_history, validation_acc, training_acc):
+            para_history = [para_w_array, para_b_array, validation_acc, training_acc]
     return para_history[0], para_history[1]#para_w_array, para_b_array#
 
 def cross_validation(input_array_length, N):
@@ -209,13 +220,13 @@ def cross_validation_slice(input_array, slice_tuple):
 
 #Parameters
 para_w_i = np.random.randn(93,1)
-para_b_i = 1
+para_b_i = np.random.randn()
 
 para_alpha = 0.001#0.001
 para_beta_1 = 0.9#0.9
 para_beta_2 = 0.999#0.999
 para_epsilon = 1e-8#1e-8
-para_epoch = 50
+para_epoch = 2000
 
 cross_validation_tuples = cross_validation(d_train.shape[0], 10)
 para_wb_list = []
@@ -225,22 +236,24 @@ for m in cross_validation_tuples:
     print('segment:%d'%cnt)
     cnt += 1
     validation_array, training_array = cross_validation_slice(d_train, m)
-    para_w, para_bias =para_w_i, para_b_i
+    para_w, para_bias = para_w_i, para_b_i
     para_w, para_bias = Adam(para_alpha, para_beta_1, para_beta_2, para_epsilon, para_w, para_bias, training_array, para_epoch, validation_array)
     current_loss = loss(para_w, para_bias, validation_array[:,0], validation_array[:,1]), loss(para_w, para_bias, training_array[:,0], training_array[:,1])
-    para_wb_list.append((para_w, para_bias, current_loss[0]))
-    record_list.append([current_loss[0], current_loss[1]])
+    current_accuracy = accuracy(para_w, para_bias, validation_array[:,0], validation_array[:,1]), accuracy(para_w, para_bias, training_array[:,0], training_array[:,1])
+    para_wb_list.append((para_w, para_bias, current_accuracy[0]))
+    record_list.append([current_loss[0], current_loss[1], current_accuracy[0], current_accuracy[1]])
     
-selected_wb_list = sorted(para_wb_list, key = lambda x: x[2])[:3]
+selected_wb_list = sorted(para_wb_list, key = lambda x: x[2])[::-1][:3]
 para_w = (selected_wb_list[0][0] * 2 + selected_wb_list[1][0] * 2 + selected_wb_list[2][0] * 1)/5.0
 para_bias = (selected_wb_list[0][1] * 2 + selected_wb_list[1][1] * 2 + selected_wb_list[2][1] * 1)/5.0
 
-print(' validation loss  training loss')
+print('  validation loss     training loss     validation acc      training acc')
 for i in record_list:
     for j in i:
-        print(j, end=" ")
+        print('%.16f'%j, end=" ")
     print()
 print(loss(para_w, para_bias, d_train[:,0], d_train[:,1]))
+print(accuracy(para_w, para_bias, d_train[:,0], d_train[:,1]))
     
 np.save("trained_w.npy", para_w)
 np.save("trained_b.npy", para_bias)
@@ -251,5 +264,9 @@ np.save("data_std.npy", d_std)
 with open("record.csv", "a") as f:
     final_loss = loss(para_w, para_bias, validation_array[:,0], validation_array[:,1]), loss(para_w, para_bias, training_array[:,0], training_array[:,1])
     print("%f,%f"%(final_loss[0], final_loss[1]), file = f)
- 
+
+with open("train_check.csv", "w") as f:
+    check_train = [1 if sigmoid(para_w, para_bias, i) >= 0.5 else 0 for i in d_train[:,0]]
+    for i in check_train:
+        print(i, file=f)
                

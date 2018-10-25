@@ -15,7 +15,7 @@ para_bias = np.load("trained_b.npy")
 d_mean = np.load("data_mean.npy")
 d_std = np.load("data_std.npy")
 
-x_test = pd.read_csv('test_x.csv', engine = 'python')
+x_test = pd.read_csv('test_x.csv')
 x_test = x_test.values
 
 #one hot
@@ -79,7 +79,7 @@ def sigmoid(w_array, bias, input_array):
     sigmoid_result = 1/(1+np.exp(-z))
     return sigmoid_result
 
-y_test = [1 if sigmoid(para_w, para_bias, i) >= 0.5 else 0 for i in x_test]
+y_test = [1 if sigmoid(para_w, para_bias, i.reshape((93,1))) >= 0.5 else 0 for i in x_test]
 
 
 with open('result_best.csv', 'w') as f:
