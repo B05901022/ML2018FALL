@@ -226,7 +226,7 @@ para_alpha = 0.001#0.001
 para_beta_1 = 0.9#0.9
 para_beta_2 = 0.999#0.999
 para_epsilon = 1e-8#1e-8
-para_epoch = 2000
+para_epoch = 1000
 
 cross_validation_tuples = cross_validation(d_train.shape[0], 10)
 para_wb_list = []
