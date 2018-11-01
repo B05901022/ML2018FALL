@@ -7,6 +7,7 @@ Created on Sat Oct 20 15:22:16 2018
 
 import pandas as pd
 import numpy as np
+import sys
 
 #np.set_printoptions(suppress=True)
 
@@ -15,7 +16,7 @@ para_bias = np.load("trained_b.npy")
 d_mean = np.load("data_mean.npy")
 d_std = np.load("data_std.npy")
 
-x_test = pd.read_csv('test_x.csv')
+x_test = pd.read_csv(sys.argv[3])
 x_test = x_test.values
 
 #one hot
@@ -82,7 +83,7 @@ def sigmoid(w_array, bias, input_array):
 y_test = [1 if sigmoid(para_w, para_bias, i.reshape((93,1))) >= 0.5 else 0 for i in x_test]
 
 
-with open('result_best.csv', 'w') as f:
+with open(sys.argv[4], 'w') as f:
     print('id,Value', file = f)
     for i in range(len(y_test)):
         print('id_%d,%d' % (i,y_test[i]), file = f)
