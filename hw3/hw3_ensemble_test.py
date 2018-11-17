@@ -21,9 +21,9 @@ x_test = np.array(x_test)/255
 from keras.models import Sequential, load_model
 
 data_paths = os.listdir("saved_model/")
-prediction = [0 for i in range(5)]
+prediction = [0 for i in range(9)]
 
-for i in range(5):
+for i in range(9):
     model_path = data_paths[-i-1]
     model = Sequential()
     model = load_model("saved_model/"+model_path+"/"+"hw3_model.h5")
@@ -31,7 +31,7 @@ for i in range(5):
 
 final_vote = []
 for i in range(prediction[0].shape[0]):
-    index_vote = np.array([prediction[j][i] for j in range(5)])
+    index_vote = np.array([prediction[j][i] for j in range(9)])
     counts = np.bincount(index_vote)
     final_vote.append(np.argmax(counts))
 
