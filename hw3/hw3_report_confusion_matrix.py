@@ -15,7 +15,7 @@ import itertools
 
 data_train = pd.read_csv('train.csv').values
 x_train = data_train[:,1].reshape((data_train.shape[0],1)).tolist()
-y_train = data_train[:,0]
+y_train = data_train[:,0].astype(int)
 
 for i in range(len(x_train)):
     x_train[i] = np.array([int(j) for j in x_train[i][0].split(' ')]).reshape((48,48,1)).tolist()
@@ -31,7 +31,7 @@ x_val = np.array([x_train[i] for i in data_arange[:int(validation_splitter*data_
 x_train = np.array([x_train[i] for i in data_arange[int(validation_splitter*data_len):]])
 """
 
-y_train = np_utils.to_categorical(y_train)
+#y_train = np_utils.to_categorical(y_train)
 """
 y_val = np.array([y_train[i] for i in data_arange[:int(validation_splitter*data_len)]])
 y_train = np.array([y_train[i] for i in data_arange[int(validation_splitter*data_len):]])
@@ -53,8 +53,10 @@ for i in range(prediction[0].shape[0]):
     index_vote = np.array([prediction[j][i] for j in range(9)])
     counts = np.bincount(index_vote)
     final_vote.append(np.argmax(counts))
-    
-conf_matrix = confusion_matrix(y_train, np.array(final_vote))
+
+#final_vote = np_utils.to_categorical(np.array(final_vote))
+final_vote = np.array(final_vote, dtype=int)    
+conf_matrix = confusion_matrix(y_train, final_vote)
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
@@ -91,5 +93,5 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
 
 plt.figure()
-plot_confusion_matrix(conf_matrix, classes = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"])
+plot_confusion_matrix(conf_matrix, classes = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"], normalize = True)
 plt.show()

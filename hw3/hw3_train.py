@@ -106,6 +106,9 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
     zoom_range=0.2)
 
 early_stopping=keras.callbacks.EarlyStopping(monitor='acc', patience=20, verbose=0, mode='auto')
-train_history = model.fit_generator(datagen.flow(x_train, y_train, batch_size=100), steps_per_epoch=int(x_train.shape[0] / 100), validation_data=(x_val, y_val), epochs=200)#, callbacks=[early_stopping]
+history = model.fit_generator(datagen.flow(x_train, y_train, batch_size=100), steps_per_epoch=int(x_train.shape[0] / 100), validation_data=(x_val, y_val), epochs=200)#, callbacks=[early_stopping]
 
-model.save('hw3_model.h5')
+#model.save('hw3_model.h5')
+import pickle
+with open('./TrainingHistoryDict', 'wb') as f:
+    pickle.dump(history.history, f)
