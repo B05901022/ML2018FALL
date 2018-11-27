@@ -8,8 +8,9 @@ Created on Sun Nov 11 09:55:02 2018
 
 import pandas as pd
 import numpy as np
+import sys
 
-data_test = pd.read_csv('test.csv').values
+data_test = pd.read_csv(sys.argv[1]).values
 x_test = data_test[:,1].reshape((data_test.shape[0],1)).tolist()
 
 for i in range(len(x_test)):
@@ -24,7 +25,7 @@ model = Sequential()
 model = load_model("hw3_model.h5")
 prediction = model.predict_classes(x_test)
 
-with open('result.csv', 'w') as f:
+with open(sys.argv[2], 'w') as f:
     print('id,label', file = f)
     for i in range(prediction.shape[0]):
         print('%d,%d' % (i,prediction[i]), file = f)

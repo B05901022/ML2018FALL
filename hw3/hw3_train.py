@@ -8,8 +8,9 @@ Created on Sat Nov 10 15:35:19 2018
 import pandas as pd
 import numpy as np
 from keras.utils import np_utils
+import sys
 
-data_train = pd.read_csv('train.csv').values
+data_train = pd.read_csv(sys.argv[1]).values
 x_train = data_train[:,1].reshape((data_train.shape[0],1)).tolist()
 y_train = data_train[:,0]
 
@@ -108,7 +109,7 @@ datagen = keras.preprocessing.image.ImageDataGenerator(
 early_stopping=keras.callbacks.EarlyStopping(monitor='acc', patience=20, verbose=0, mode='auto')
 history = model.fit_generator(datagen.flow(x_train, y_train, batch_size=100), steps_per_epoch=int(x_train.shape[0] / 100), validation_data=(x_val, y_val), epochs=200)#, callbacks=[early_stopping]
 
-#model.save('hw3_model.h5')
+model.save('hw3_model.h5')
 import pickle
 with open('./TrainingHistoryDict', 'wb') as f:
     pickle.dump(history.history, f)

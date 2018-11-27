@@ -8,8 +8,9 @@ Created on Wed Nov 14 15:11:34 2018
 import os
 import pandas as pd
 import numpy as np
+import sys
 
-data_test = pd.read_csv('test.csv').values
+data_test = pd.read_csv(sys.argv[1]).values
 x_test = data_test[:,1].reshape((data_test.shape[0],1)).tolist()
 
 for i in range(len(x_test)):
@@ -35,7 +36,7 @@ for i in range(prediction[0].shape[0]):
     counts = np.bincount(index_vote)
     final_vote.append(np.argmax(counts))
 
-with open('result.csv', 'w') as f:
+with open(sys.argv[2], 'w') as f:
     print('id,label', file = f)
     for i in range(len(final_vote)):
         print('%d,%d' % (i,final_vote[i]), file = f)
