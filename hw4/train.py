@@ -30,7 +30,8 @@ for i, vocab in enumerate(vocab_list):
 embedding_layer = Embedding(input_dim=embedding_matrix.shape[0],
                             output_dim=embedding_matrix.shape[1],
                             weights=[embedding_matrix],
-                            trainable=False)
+                            trainable=False
+                            )
 
 
 def text_to_index(corpus):
@@ -70,7 +71,8 @@ model = Sequential()
 model.add(embedding_layer)
 model.add(Bidirectional(GRU(256, return_sequences=True)))
 model.add(Bidirectional(GRU(256, return_sequences=True)))
-model.add(Dense(256, activation='relu'))
+#model.add(Dense(256, activation='relu'))
+model.add(TimeDistributed(Dense(256, activation='relu')))
 #model.add(BatchNormalization())
 #model.add(LeakyReLU(alpha=0.3))
 model.add(Dropout(0.1))
@@ -86,7 +88,7 @@ model.summary()
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_crossentropy', 'accuracy'])
 
 
-history = model.fit(x=train_data, y=label, batch_size=500, epochs=5, validation_split=0.1)
+history = model.fit(x=train_data, y=label, batch_size=500, epochs=7, validation_split=0.1)
 
 model.save('hw4_model.h5')
 #np.save("mean_std.npy", np.array(mean,std))
