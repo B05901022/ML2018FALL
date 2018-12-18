@@ -88,7 +88,7 @@ model.summary()
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_crossentropy', 'accuracy'])
 
 
-history = model.fit(x=train_data, y=label, batch_size=500, epochs=7, validation_split=0.1)
+history = model.fit(x=train_data, y=label, batch_size=500, epochs=5, validation_split=0.1)
 
 model.save('hw4_model.h5')
 #np.save("mean_std.npy", np.array(mean,std))
