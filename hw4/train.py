@@ -13,8 +13,9 @@ from keras.utils import to_categorical
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import Sequential
 from keras.layers import Embedding, CuDNNGRU, Dense, TimeDistributed, BatchNormalization, LeakyReLU, Dropout, LSTM, GRU, Bidirectional
+import sys
 
-jieba.load_userdict('dict.txt.big')
+jieba.load_userdict(sys.argv[4])
 w2v_model = word2vec.Word2Vec.load("dcard_word2vec.model")
 
 #embedding layer
@@ -47,10 +48,10 @@ def text_to_index(corpus):
     return np.array(new_corpus)
 
 #cut the sentence
-input_datas = [list(jieba.cut(i.split(',')[1])) for i in open('./train_x.csv', 'r').read().split('\n')[1:-1]]
+input_datas = [list(jieba.cut(i.split(',')[1])) for i in open(sys.argv[1], 'r').read().split('\n')[1:-1]]
 
 #load and generate train data/label
-label = to_categorical(np.load("dcard_labels.npy")).reshape(120000,1,2)#np.load("dcard_labels.npy").reshape(120000,1,1)#
+label = to_categorical(np.array([int(i.split(',')[1]) for i in open(sys.argv[2], 'r').read().split('\n')[1:-1]])).reshape(120000,1,2)#label = to_categorical(np.load("dcard_labels.npy")).reshape(120000,1,2)#np.load("dcard_labels.npy").reshape(120000,1,1)#
 train_data = text_to_index(input_datas)
 
 

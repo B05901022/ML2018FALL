@@ -13,8 +13,9 @@ from gensim.models import word2vec
 #from keras.preprocessing.sequence import pad_sequences
 #from keras.models import Sequential
 #from keras.layers import Embedding, CuDNNGRU, Dense, TimeDistributed, BatchNormalization, LeakyReLU, Dropout, LSTM, GRU, Bidirectional
+import sys
 
-jieba.load_userdict('dict.txt.big')
+jieba.load_userdict(sys.argv[2])
 w2v_model = word2vec.Word2Vec.load("dcard_word2vec.model")
 
 #embedding layer
@@ -47,7 +48,7 @@ def text_to_index(corpus):
     return np.array(new_corpus)
 
 #cut the sentence
-input_datas = [list(jieba.cut(i.split(',')[1])) for i in open('./test_x.csv', 'r').read().split('\n')[1:-1]]
+input_datas = [list(jieba.cut(i.split(',')[1])) for i in open(sys.argv[1], 'r').read().split('\n')[1:-1]]
 
 #load and generate train data/label
 #label = to_categorical(np.load("dcard_labels.npy")).reshape(120000,1,2)#np.load("dcard_labels.npy").reshape(120000,1,1)#
@@ -65,8 +66,10 @@ model = Sequential()
 model = load_model("hw4_model.h5")
 prediction = model.predict_classes(test_data)
 
-with open("result.csv", 'w') as f:
+with open(sys.argv[3], 'w') as f:
+
     print('id,label', file = f)
     for i in range(prediction.shape[0]):
         print('%d,%d' % (i,prediction[i][0]), file = f)
+
 
