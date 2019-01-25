@@ -16,4 +16,9 @@ Tune the hyperparameters to achieve higher performance on LSUN dataset with ResN
 Using Keras to build a RNN model to classify if the comments are malicious.  
 ****
 ## Final Project - Small Data Training for Medical Images  
-Using pytorch to build a CNN model that classify chest diseases with DenseNet201 and Auto-Encoder. We achieved a AUROC=0.79998 score using only small part of NIH dataset. 
+Using pytorch to build a CNN model that classify chest diseases with DenseNet201 and Auto-Encoder. We achieved a AUROC=0.79998 score using only small part of NIH dataset. Colaboration with  
+<p align="center">NTUEE B05901009 高瑋聰</p>  
+<p align="center">NTUEE B05901034 劉奎元</p>   
+  
+View our code from  
+<p align="center">https://github.com/sky1456723/ML2018FALL</p>
